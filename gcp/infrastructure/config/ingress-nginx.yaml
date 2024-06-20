@@ -1,0 +1,9 @@
+controller:
+  admissionWebhooks:
+    enabled: false
+  replicaCount: ${replica_count}
+  service:
+    loadBalancerIP: ${load_balancer_ip_address}
+    externalIPs: [${external_ip_addresses}]
+  allowSnippetAnnotations: true
+  config: ${ingress_config}

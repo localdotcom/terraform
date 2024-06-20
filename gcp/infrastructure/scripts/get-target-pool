@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+
+"""
+Get target pool
+"""
+
+import sys
+import subprocess
+import json
+import string
+
+def main(project, environment):
+	target_pools = subprocess.check_output("gcloud compute target-pools list --project %s | awk '{print $1}' | awk 'NR>1' | wc -l" % project, shell=True)
+
+	for count in range(0, int(target_pools)):
+		instance = subprocess.check_output("gcloud compute target-pools list --project %s --format=json | jq -r '.[%d].instances[0]'" % (project, count), shell=True, encoding="utf8").rstrip()
+		tag = subprocess.check_output("gcloud compute instances describe %s --project %s --format=json | jq -r '.tags | .items[0]'" % (instance, project), shell=True, encoding="utf8").rstrip()
+
+		if environment in tag:
+			name = subprocess.check_output("gcloud compute target-pools list --project %s --format=json | jq -r '.[%d].name'" % (project, count), shell=True, encoding="utf8").rstrip()	
+			self_link = subprocess.check_output("gcloud compute target-pools list --project %s --format=json | jq -r '.[%d].selfLink'" % (project, count), shell=True, encoding="utf8").rstrip()
+
+	# generate dummy output to avoid Terraform External Data Source error:
+	# 'Program output must be a JSON encoded map of string keys and string values'
+	output = json.dumps({"name": name, "self_link": self_link})
+	
+	print(output)
+
+if __name__ == "__main__":
+	# read input variables from stdin
+	input = sys.stdin.read()
+	input_json = json.loads(input)
+
+	main(project=input_json.get('project'), environment=input_json.get('environment'))

@@ -1,0 +1,10 @@
+.gitkeep
+.terraform
+*.terraform
+.terraform/*
+terraform.tfstate.backup
+terraform.tfstate
+.terraform.tfstate.lock.info
+backup/*
+*.lock.hcl
+*.kubeconfig

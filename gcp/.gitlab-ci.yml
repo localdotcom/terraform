@@ -1,0 +1,107 @@
+# default
+default:
+  image: dclocal/terraform-deployer:1.6.6
+  tags:
+    - <gitlab_worker_tag>  # gitlab worker tag here
+
+stages:
+  - bootstrap
+  - deploy
+
+# project-related variables
+.variables:
+  # gcp_project_id_001
+  gcp_project_id_001:
+    GCP_PROJECT_ID: gcp_project_id_001
+    GCP_REGION: europe-west1
+    GCP_ORG: <gcp_org_id>
+    TF_BACKEND: $GCP_PROJECT_ID-tfstate
+    TF_ENVS: dev
+    TF_MODULES: vpc bastion postgresql gke
+    TF_MODULE_PATH: $TF_ROOT/modules
+    TF_PROJECT_PATH: $TF_ROOT/.projects/$GCP_ORG/$GCP_PROJECT_ID
+    TF_ROOT: infrastructure
+    TF_VAR_FILE: $TF_PROJECT_PATH/values.tfvars.json
+    DELETION_PROTECTION: "true"
+  # gcp_project_id_002
+  gcp_project_id_002:
+    GCP_PROJECT_ID: gcp_project_id_002
+    GCP_REGION: europe-west1
+    GCP_ORG: <gcp_org_id>
+    TF_BACKEND: $GCP_PROJECT_ID-tfstate
+    TF_ENVS: stage prod
+    TF_MODULES: vpc bastion mysql gke cert-manager ingress-nginx lb
+    TF_MODULE_PATH: $TF_ROOT/modules
+    TF_PROJECT_PATH: $TF_ROOT/.projects/$GCP_ORG/$GCP_PROJECT_ID
+    TF_ROOT: infrastructure
+    TF_VAR_FILE: $TF_PROJECT_PATH/values.tfvars.json
+    DELETION_PROTECTION: "true"
+  
+# snippets
+.snippets:
+  generate-config:
+    - |
+      for environment in ${TF_ENVS[@]}; do
+          export TF_ENV=$environment
+          ./generate-config
+      done
+
+# deploy gcp_project_id_001
+gcp_project_id_001:generate-config:
+  stage: bootstrap
+  script:
+    - !reference [.snippets, generate-config]
+  variables: !reference [.variables, gcp_project_id_001]
+  artifacts:
+    paths:
+      - .ci_$GCP_PROJECT_ID-dev.yml
+  rules:
+    - changes:
+      - $TF_ROOT/**/*
+
+gcp_project_id_001:deploy-dev:
+  stage: deploy
+  trigger:
+    include:
+      - artifact: .ci_$GCP_PROJECT_ID-dev.yml
+        job: gcp_project_id_001:generate-config
+  variables: !reference [.variables, gcp_project_id_001]
+  rules:
+    - changes:
+      - $TF_ROOT/**/*
+
+# deploy gcp_project_id_002
+gcp_project_id_002:generate-config:
+  stage: bootstrap
+  script:
+    - !reference [.snippets, generate-config]
+  variables: !reference [.variables, gcp_project_id_002]
+  artifacts:
+    paths:
+      - .ci_$GCP_PROJECT_ID-dev.yml
+      - .ci_$GCP_PROJECT_ID-prod.yml
+  rules:
+    - changes:
+      - $TF_ROOT/**/*
+
+gcp_project_id_002:deploy-dev:
+  stage: deploy
+  trigger:
+    include:
+      - artifact: .ci_$GCP_PROJECT_ID-stage.yml
+        job: gcp_project_id_002:generate-config
+  variables: !reference [.variables, gcp_project_id_002]
+  rules:
+    - changes:
+      - $TF_ROOT/**/*
+
+gcp_project_id_002:deploy-production:
+  stage: deploy
+  trigger:
+    include:
+      - artifact: .ci_$GCP_PROJECT_ID-prod.yml
+        job: gcp_project_id_002:generate-config
+  variables: !reference [.variables, gcp_project_id_002]
+  rules:
+    - changes:
+      - $TF_ROOT/**/*

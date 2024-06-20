@@ -1,0 +1,28 @@
+# default
+default:
+  image: dclocal/terraform-deployer:1.6.6
+  tags:
+    - <gitlab_worker_tag>  # gitlab worker tag here
+
+stages:
+  - plan
+  - apply
+  - destroy
+
+# job configurations
+.plan:
+  stage: plan
+  when: manual
+  # allow_failure: false
+
+.apply:
+  stage: apply
+  when: manual
+  # allow_failure: false
+
+.destroy:
+  stage: destroy
+  when: manual
+  # allow_failure: false
+  rules:
+    - if: '$DELETION_PROTECTION != "true"'

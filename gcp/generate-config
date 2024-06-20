@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+
+"""
+Generate GitLab CI config file
+"""
+
+import os
+import sys
+
+# declare variables
+list_actions = ['plan', 'apply', 'destroy']
+root_path = os.environ.get('TF_ROOT')
+environment = os.environ.get('TF_ENV')
+project = os.environ.get('GCP_PROJECT_ID')
+list_modules = os.environ.get('TF_MODULES').split()
+filename = ".ci_%s-%s.yml" % (project, environment)
+
+list_modules.append('all')
+
+import_config = """
+include:
+  - local: .config-ci.yml
+"""
+
+with open(filename, 'w') as file:
+    file.write(import_config)
+
+def main():
+    for module in list_modules:
+        for action in list_actions:
+            script = "%s/terraform %s %s" % (root_path, action, module)
+            
+            if module == 'all':
+                script = script.replace('all', '', 1)
+
+            if action == 'apply':
+                job_definition = f"""
+'{project}[{environment}] {action}:{module}':
+  extends: .{action}
+  environment: {environment}
+  script:
+    - {script}
+  needs:
+    - '{project}[{environment}] plan:{module}'
+            """
+            else:
+                job_definition = f"""
+'{project}[{environment}] {action}:{module}':
+  extends: .{action}
+  environment: {environment}
+  script:
+    - {script}
+            """
+            with open(filename, 'a') as file:
+                file.write(job_definition)
+
+    print("File '%s' created" % filename)
+
+if __name__ == '__main__':
+    main()
