@@ -14,7 +14,7 @@ stages:
   gcp_project_id_001:
     GCP_PROJECT_ID: gcp_project_id_001
     GCP_REGION: europe-west1
-    GCP_ORG: <gcp_org_id>
+    GCP_ORG: <gcp_organization>
     TF_BACKEND: $GCP_PROJECT_ID-tfstate
     TF_ENVS: dev
     TF_MODULES: vpc bastion postgresql gke
@@ -27,9 +27,9 @@ stages:
   gcp_project_id_002:
     GCP_PROJECT_ID: gcp_project_id_002
     GCP_REGION: europe-west1
-    GCP_ORG: <gcp_org_id>
+    GCP_ORG: <gcp_organization>
     TF_BACKEND: $GCP_PROJECT_ID-tfstate
-    TF_ENVS: stage prod
+    TF_ENVS: dev prod
     TF_MODULES: vpc bastion mysql gke cert-manager ingress-nginx lb
     TF_MODULE_PATH: $TF_ROOT/modules
     TF_PROJECT_PATH: $TF_ROOT/.projects/$GCP_ORG/$GCP_PROJECT_ID
