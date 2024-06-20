@@ -93,47 +93,12 @@ def run_terraform_plan():
 
 # terraform apply function
 def run_terraform_apply(module):
-    output = subprocess.check_output("terraform plan -var-file=%s" % var_file, shell=True, text=True) # return 'subprocess.check_output' output
-    resource_diff_start = output.find("Terraform will perform the following actions:") # extract the resource differences section from the 'subprocess.check_output' output
-    result = subprocess.run("terraform apply -var-file=%s -auto-approve" % var_file, shell=True) # return 'subprocess.run' result
-
-    message_title = "The changes have been applied for the module '{}'"
-
-    if resource_diff_start == -1:
-        return None
-    else:
-        if result.returncode == 0:  # check whether returncode from result is '0', then send notification to slack
-            post_message(message_title, module)
+    subprocess.run("terraform apply -var-file=%s -auto-approve" % var_file, shell=True)
 
 # terraform destroy function
 def run_terraform_destroy(module):
-    output = subprocess.check_output("terraform plan -var-file=%s -destroy" % var_file, shell=True, text=True)
-    resource_diff_start = output.find("Terraform will perform the following actions:")
-    result = subprocess.run("terraform destroy -var-file=%s -auto-approve" % var_file, shell=True)
-    # result = subprocess.run("terraform plan -var-file=%s -destroy" % var_file, shell=True) # dry-run
-    
-    message_title = "The module '{}' has been destroyed"
-    
-    if resource_diff_start == -1:
-        return None
-    else:
-        if result.returncode == 0:
-            post_message(message_title, module)
-
-# slack notification function
-def post_message(message_title, module):
-    slack_token = os.environ.get('SLACK_TOKEN')
-    slack_channel = os.environ.get('SLACK_CHANNEL')
-
-    host = requests.get('https://checkip.amazonaws.com').text.strip()
-
-    attachments = [{"type":"mrkdwn","color":"#FFC300","title":message_title.format(module),"text":"Module: %s\nProject: %s\nEnvironment: %s\nHost: %s" % (module, project, environment, host)}]
-
-    requests.post('https://slack.com/api/chat.postMessage', {
-        'token': slack_token,
-        'channel': slack_channel,
-        'attachments': json.dumps(attachments)
-    }).json()
+    subprocess.run("terraform destroy -var-file=%s -auto-approve" % var_file, shell=True)
+    # subprocess.run("terraform plan -var-file=%s -destroy" % var_file, shell=True) # dry-run
 
 # main function
 def main(action, modules):

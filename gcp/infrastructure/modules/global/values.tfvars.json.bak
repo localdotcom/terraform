@@ -50,7 +50,7 @@
                     "grant_access_to": "project",
                     "roles": [
                         "roles/viewer",
-                        "projects/innocode-dev/roles/<custom_role>"
+                        "projects/${GCP_PROJECT_ID}/roles/<custom_role>"
                     ]
                 }
             ],
@@ -61,7 +61,7 @@
                     "grant_access_to": "project",
                     "roles": [
                         "roles/viewer",
-                        "projects/innocode-dev/roles/<custom_role>"
+                        "projects/${GCP_PROJECT_ID}/roles/<custom_role>"
                     ]
                 }
             ]
@@ -72,7 +72,7 @@
                     "name": "<user@domain.com>",
                     "roles": [
                         "roles/container.developer",
-                        "projects/innocode-dev/roles/<custom_role>"
+                        "projects/${GCP_PROJECT_ID}/roles/<custom_role>"
                     ]
                 }
             ],
